@@ -60,7 +60,15 @@ def get_mail_outbox_all(uid):
 def get_mail(mid):
     try:
         mid = int(mid)
-        return Mail.query.get(mid)
+        return mail.query.get(mid)
+    except:
+        return None
+
+@cache('event:view:{tid}', 300)
+def get_topic(tid):
+    try:
+        tid = int(tid)
+        return Topic.query.get(tid)
     except:
         return None
 
@@ -69,18 +77,32 @@ def get_event_page(page):
     try:
         page = int(page)
         page_obj = Topic.get_event_page(page, per_page=PAGE_NUM)
-        list_page = Obj()
-        list_page.items = page_obj.items
-        list_page.has_next = page_obj.has_next
-        list_page.has_prev = page_obj.has_prev
-        list_page.next_num = page_obj.next_num
-        list_page.page = page_obj.page
-        list_page.pages = page_obj.pages
-        list_page.total = page_obj.total
-        list_page.iter_pages = xrange(1, page_obj.pages+1)
+        list_page = gen_list_page_obj(page_obj)
         return list_page
     except Exception, e:
         return None
+
+@cache('event:list:{user_id}:{page}', 100)
+def get_mine_event_page(user_id, page):
+    try:
+        user_id = int(user_id)
+        page_obj = Topic.get_user_event_page(user_id, page, per_page=PAGE_NUM)
+        list_page = gen_list_page_obj(page_obj)
+        return list_page
+    except Exception, e:
+        return None
+
+def gen_list_page_obj(page_obj):
+    list_page = Obj()
+    list_page.items = page_obj.items
+    list_page.has_next = page_obj.has_next
+    list_page.has_prev = page_obj.has_prev
+    list_page.next_num = page_obj.next_num
+    list_page.page = page_obj.page
+    list_page.pages = page_obj.pages
+    list_page.total = page_obj.total
+    list_page.iter_pages = xrange(1, page_obj.pages+1)
+    return list_page
 
 def get_mail_by(**kw):
     return Mail.query.filter_by(**kw)

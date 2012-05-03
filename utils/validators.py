@@ -3,6 +3,17 @@
 
 import re
 
+def check_new_reply(content, visit_user_id):
+    if not content or len(content)<10:
+        return u'内容记得多写点呐'
+    if not visit_user_id:
+        return u'这，谁回复呢'
+    try:
+        int(visit_user_id)
+    except:
+        return u'洗洗睡吧……'
+    return None
+
 def check_new_event(title, content, start_date):
     from datetime import datetime, date
     if not title:

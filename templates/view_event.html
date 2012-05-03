@@ -1,0 +1,40 @@
+{% extends "index.html" %}
+
+{%block content %}
+<table>
+    <tr>
+        <td>发起人:</td>
+        <td><a href="/people/{{ event.from_uid_url }}">{{ event.from_uid }}</a></td>
+    </tr>
+    <tr>
+        <td>标题：</td>
+        <td>{{ event.title }}</td>
+    </tr>
+    <tr>
+        <td>内容：</td>
+        <td>{{ event.content }}</td>
+    </tr>
+    <tr>
+        <td>时间：</td>
+        <td>{{ event.start_date }}</td>
+    </tr>
+<table>
+{%if not diable_reply %}
+<form method="post" action="/event/reply/{{ event.id }}">
+  <ul>
+    <li>
+        <label for="content">内容</label>
+        <textarea name="content" rows="5" cols="10">{{ content }}</textarea>
+    </li>
+    <li>
+        <button type="submit">提交</button>
+    </li>
+  </ul>
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="_visit_user" value="{{ visit_user_id }}">
+</form>
+{% if error %}
+<span>{{ error }}</span>
+{% endif %}
+{% endif %}
+{% endblock %}

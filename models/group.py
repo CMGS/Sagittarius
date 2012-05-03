@@ -50,6 +50,11 @@ class Topic(db.Model):
         page_obj = Topic.query.filter(Topic.start_date>=today).order_by(desc(Topic.id)).paginate(page, per_page=per_page)
         return page_obj
 
+    @staticmethod
+    def get_user_event_page(uid, page, per_page):
+        page_obj = Topic.query.filter(Topic.from_uid==uid).order_by(desc(Topic.id)).paginate(page, per_page=per_page)
+        return page_obj
+
 class Reply(db.Model):
     __tablename__ = 'reply'
     id = db.Column('id', db.Integer, primary_key=True, autoincrement=True)
@@ -58,17 +63,19 @@ class Reply(db.Model):
     content = db.Column(db.Text, nullable=False)
     create_time = db.Column(db.DateTime, default=datetime.now)
 
-    def __init__(self, from_uid, content, *args, **kwargs):
+    def __init__(self, topic_id, content, from_uid, *args, **kwargs):
+        self.topic_id = topic_id
         self.from_uid = from_uid
         self.content = content
         for k, v in kwargs.iteritems():
             setattr(self, k, v)
 
     @staticmethod
-    def create(from_uid, content):
-        reply = Reply(from_uid=from_uid,
+    def create(topic_id, from_uid, content):
+        reply = Reply(topic_id = topic_id,
+                      from_uid=from_uid,
                       content = content)
-        db.session.add(topic)
+        db.session.add(reply)
         db.session.commit()
 
 class Choice(db.Model):
