@@ -36,11 +36,9 @@ def event_list(page):
     list_page = get_event_page(page)
     #cache items total num
     #TODO ugly
-    print list_page.total
     if not os.environ.get('TOTAL_EVENTS_NUM'):
         os.environ['TOTAL_EVENTS_NUM'] = str(list_page.total)
     elif int(os.environ['TOTAL_EVENTS_NUM']) != list_page.total:
-        print os.environ.get('TOTAL_EVENTS_NUM')
         backend.delete('event:list:%d' % page)
         list_page = get_event_page(page)
     if not list_page:
