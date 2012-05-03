@@ -4,7 +4,7 @@
 from flaskext.sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
-def init_account_db(app):
+def init_group_db(app):
     db.init_app(app)
     db.app = app
     db.create_all()
@@ -60,5 +60,21 @@ class Reply(db.Model):
         reply = Reply(from_uid=from_uid,
                       content = content)
         db.session.add(topic)
+        db.session.commit()
+
+class Choice(db.Model):
+    __tablename__ = 'choice'
+    id = db.Column('id', db.Integer, primary_key=True, autoincrement=True)
+    topic_id = db.Column(db.Integer, index=True)
+    choice_uid = db.Column(db.Integer, index=True)
+
+    def __init__(self, topic_id, choice_uid):
+        self.topic_id = topic_id
+        self.choice_uid = choice_uid
+
+    @staticmethod
+    def choice(tid, uid):
+        c = Choice(tid, uid)
+        db.session.add(c)
         db.session.commit()
 
