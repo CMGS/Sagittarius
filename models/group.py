@@ -1,6 +1,8 @@
 #!/usr/local/bin/python2.7
 #coding:utf-8
 
+from datetime import datetime
+
 from flaskext.sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
