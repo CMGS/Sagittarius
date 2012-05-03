@@ -47,13 +47,18 @@ class Topic(db.Model):
     @staticmethod
     def get_event_page(page, per_page):
         today = datetime.now().date()
-        page_obj = Topic.query.filter(Topic.start_date>=today).order_by(desc(Topic.id)).paginate(page, per_page=per_page)
+        page_obj = Topic.query.filter(Topic.start_date>=today).order_by(desc(Topic.create_time)).paginate(page, per_page=per_page)
         return page_obj
 
     @staticmethod
     def get_user_event_page(uid, page, per_page):
         page_obj = Topic.query.filter(Topic.from_uid==uid).order_by(desc(Topic.id)).paginate(page, per_page=per_page)
         return page_obj
+
+    @staticmethod
+    def count():
+        today = datetime.now().date()
+        return Topic.query.filter(Topic.start_date>=today).count()
 
 class Reply(db.Model):
     __tablename__ = 'reply'
@@ -77,6 +82,11 @@ class Reply(db.Model):
                       content = content)
         db.session.add(reply)
         db.session.commit()
+
+    @staticmethod
+    def get_reply_page(topic_id, page, per_page):
+        page_obj = Reply.query.filter(Reply.topic_id==topic_id).paginate(page, per_page=per_page)
+        return page_obj
 
 class Choice(db.Model):
     __tablename__ = 'choice'

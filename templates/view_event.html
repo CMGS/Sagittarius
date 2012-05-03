@@ -19,6 +19,34 @@
         <td>{{ event.start_date }}</td>
     </tr>
 <table>
+{% if reply %}
+<table>
+{% for r in reply %}
+    <tr>
+        <td>时间: {{ r.create_time }}</td>
+        <td>内容: {{ r.content }}</td>
+        <td>作者: <a href="/people/{{ r.from_uid_url }}">{{ r.from_uid }}</a></td>
+    </tr>
+{% endfor %}
+</table>
+<div class=pagination>
+{% if list_page.has_prev %}
+    <a href="/event/view/{{event.id}}?p={{ list_page.page - 1 }}">&laquo; Prev</a>
+{% endif %}
+{% for page in list_page.iter_pages %}
+    {% if page != list_page.page %}
+    <a href="/event/view/{{ event.id }}?p={{ page }}">{{ page }}</a>
+    {% else %}
+    <strong>{{ page }}</strong>
+    {% endif %}
+{% endfor %}
+{% if list_page.has_next %}
+    <a href="/event/view/{{ event.id }}?p={{ list_page.page + 1 }}">Next &raquo;</a>
+{% endif %}
+</div>
+{% else %}
+<p>No comments</p>
+{% endif %}
 {%if not diable_reply %}
 <form method="post" action="/event/reply/{{ event.id }}">
   <ul>

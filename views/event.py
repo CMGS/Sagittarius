@@ -25,6 +25,23 @@ def gen_eventlist(events, key):
         event_list.append(e)
     return event_list
 
+def gen_replylist(reply, key):
+    if not reply:
+        return None
+    reply = reply.items
+    reply_list = []
+    count = 1
+    for r in reply:
+        from_user = get_user(getattr(r, key))
+        e = Obj()
+        setattr(e, key, from_user.name)
+        setattr(e, key+'_url', from_user.domain or from_user.id)
+        e.num = count
+        e.create_time = r.create_time
+        e.content = r.content
+        reply_list.append(e)
+    return reply_list
+
 def gen_event(topic):
     eobj = Obj()
     eobj.id = topic.id
@@ -46,10 +63,8 @@ def event_list(page):
     list_page = get_event_page(page)
 
     #cache items total num
-    total_events_num = redistore.get('event|total_events_num')
-    if not total_events_num:
-        redistore.set('event|total_events_num', list_page.total)
-    elif int(total_events_num) != list_page.total:
+    total_events_num = count_topic()
+    if total_events_num != list_page.total:
         backend.delete('event:list:%d' % page)
         list_page = get_event_page(page)
 
@@ -70,10 +85,8 @@ def my_event_list(page):
     list_page = get_mine_event_page(user.id, page)
 
     #cache items total num
-    total_events_num = redistore.get('event|uid-%s|events_num' % user.id)
-    if not total_events_num:
-        redistore.set('event|uid-%s|events_num' % user.id, list_page.total)
-    elif int(total_events_num) != list_page.total:
+    total_events_num = count_user_topic(user.id)
+    if total_events_num != list_page.total:
         backend.delete('event:list:%d:%d' % (user.id, page))
         list_page = get_mine_event_page(user.id, page)
 
@@ -108,13 +121,9 @@ def write():
                  start_date = start_date)
 
     #clean cache
-    total_events_num = redistore.get('event|total_events_num')
-    if total_events_num:
-        redistore.set('event|total_events_num', int(total_events_num)+1)
-    total_events_num = redistore.get('event|uid-%s|events_num' % user.id)
-    if total_events_num:
-        redistore.set('event|uid-%s|events_num' % user.id, int(total_events_num)+1)
     backend.delete('event:list:1')
+    backend.delete('event:topic:count')
+    backend.delete('event:topic:%d:count' % user.id)
 
     return redirect(url_for('event.index'))
 
@@ -122,17 +131,27 @@ def write():
 def view(event_id):
     user = get_current_user()
     topic = get_topic(event_id)
+    reply_page = request.args.get('p', '1')
 
-    if not topic:
+    if not topic or not reply_page.isdigit():
         raise abort(404)
+    reply_page = int(reply_page)
 
     eobj = gen_event(topic)
+    reply_list = get_reply(topic.id, reply_page)
+    #clean cache when update
+    if reply_list and count_reply(topic.id) != reply_list.total:
+        backend.delete('event:%d:reply:%s' % (topic.id, reply_page))
+        reply_list = get_reply(topic.id, reply_page)
+    reply = gen_replylist(reply_list, 'from_uid')
+
     if user:
         return render_template('view_event.html', event = eobj, \
-                visit_user_id = user.id)
+                visit_user_id = user.id, reply = reply, \
+                list_page = reply_list)
     else:
         return render_template('view_event.html', event = eobj, \
-                diable_reply = 1)
+                diable_reply = 1, reply = reply, list_page = reply_list)
 
 @event.route('/reply/<int:event_id>', methods=['POST'])
 def reply(event_id):
@@ -161,4 +180,9 @@ def reply(event_id):
                  content = content,
                  from_uid = visit_user.id)
 
+    #clean cache
+    backend.delete('event:%d:reply:1' % topic.id)
+    backend.delete('event:%d:reply:count' % topic.id)
+
     return redirect(url_for('event.view', event_id=event_id))
+

@@ -23,7 +23,7 @@
     {% else %}
     <strong>{{ page }}</strong>
     {% endif %}
-{%- endfor %}
+{% endfor %}
 {% if list_page.has_next %}
     <a href="/event/list/{{ list_page.page + 1 }}">Next &raquo;</a>
 {% endif %}
