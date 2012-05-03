@@ -4,7 +4,6 @@
 from flask import g
 from sheep.api.cache import cache
 
-from redistore import redistore
 from validators import check_domain
 from helper import gen_list_page_obj
 
@@ -12,14 +11,6 @@ from config import PAGE_NUM
 from models.mail import Mail
 from models.group import Topic, Reply, Choice
 from models.account import User, Forget, OAuth
-
-def get_current_user():
-    if not g.session or not g.session.get('user_id') or not g.session.get('user_token'):
-        return None
-    token = redistore.get('account|uid-%s|token' % g.session['user_id'])
-    if not token or g.session['user_token'] != token:
-        return None
-    return get_user(g.session['user_id'])
 
 @cache('account:{username}', 300)
 def get_user(username):
@@ -131,4 +122,12 @@ def get_oauth_by(**kw):
 
 def get_user_by(**kw):
     return User.query.filter_by(**kw)
+
+def get_current_user():
+    if not g.session or not g.session.get('user_id') or not g.session.get('user_token'):
+        return None
+    user = get_user(g.session['user_id'])
+    if g.session['user_token'] != user.token:
+        return None
+    return user
 
