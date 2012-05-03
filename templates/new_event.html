@@ -1,0 +1,27 @@
+{% extends "index.html" %}
+
+{%block content %}
+<form method="post" action="/event/write">
+  <ul>
+    <li>
+        <label for="title">标题</label>
+        <input type="text" name="title" value="{{ title }}" size="45"/>
+    </li>
+    <li>
+        <label for="content">内容</label>
+        <textarea name="content" rows="5" cols="10">{{ content }}</textarea>
+    </li>
+    <li>
+        <label for="start_date">开始时间</label>
+        <input type="text" name="start_date" value="{{ start_date }}" size="25"/>
+    </li>
+    <li>
+        <button type="submit">提交</button>
+    </li>
+  </ul>
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+</form>
+{% if error %}
+<span>{{ error }}</span>
+{% endif %}
+{% endblock %}

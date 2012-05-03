@@ -1,0 +1,31 @@
+{% extends "index.html" %}
+
+{%block content %}
+<table>
+    <tr>
+        <td>创建人</td>
+        <td>标题</td>
+    </tr>
+    {% for event in events %}
+    <tr>
+        <td><a href="/people/{{ event.from_uid_url }}">{{ event.from_uid }}</a></td>
+        <td><a href="/event/view/{{ event.id }}">{{ event.title }}</a></td>
+    </tr>
+    {% endfor %}
+<table>
+<div class=pagination>
+{% if list_page.has_prev %}
+    <a href="/event/list/{{ list_page.page - 1 }}">&laquo; Prev</a>
+{% endif %}
+{% for page in list_page.iter_pages %}
+    {% if page != list_page.page %}
+    <a href="/event/list/{{ page }}">{{ page }}</a>
+    {% else %}
+    <strong>{{ page }}</strong>
+    {% endif %}
+{%- endfor %}
+{% if list_page.has_next %}
+    <a href="/event/list/{{ list_page.page + 1 }}">Next &raquo;</a>
+{% endif %}
+</div>
+{% endblock %}
