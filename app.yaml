@@ -1,4 +1,4 @@
-application: Sagittarius
+application: sagittarius
 version: 1
 runtime: python
 api_version: 1
