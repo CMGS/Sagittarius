@@ -184,4 +184,3 @@ def reply_mail_title(title):
     title = title.replace('Re(%s)' % m.group('num'), 'Re(%d)' % num, 1)
     return title
 
-
