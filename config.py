@@ -28,6 +28,7 @@ SMTP_USER = '1925601625@qq.com'
 SMTP_PASSWORD = 'xiaomenkou!@#$%^()'
 
 FORGET_STUB_EXPIRE = 30*60
+PAGE_NUM = 10
 
 try:
     from local_config import *

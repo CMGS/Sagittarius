@@ -18,22 +18,20 @@ logger = logging.getLogger(__name__)
 
 mail = Blueprint('mail', __name__)
 
-class mail_obj: pass
-
 def gen_maillist(mails, key, pos=0):
-    maillist = []
+    mail_list = []
     for mail in mails:
         from_user = get_user(getattr(mail, key))
-        if not from_user or not int(mail.isshow[pos]):
+        if not from_user or not int(mail.is_show[pos]):
             continue
-        m = mail_obj()
+        m = Obj()
         setattr(m, key, from_user.name)
         setattr(m, key+'_url', from_user.domain or from_user.id)
         m.id = mail.id
         m.title = mail.title
         m.is_read = mail.is_read
-        maillist.append(m)
-    return maillist
+        mail_list.append(m)
+    return mail_list
 
 @mail.route('/')
 def index():
@@ -91,7 +89,7 @@ def view(mail_id):
 
     Mail.mark_as_read(mail)
 
-    mobj = mail_obj()
+    mobj = Obj()
     mobj.id = mail_id
     mobj.delete = '%s/%s' %(box, str(mail_id))
     from_user = get_user(mail.from_uid)

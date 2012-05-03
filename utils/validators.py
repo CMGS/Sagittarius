@@ -3,6 +3,22 @@
 
 import re
 
+def check_new_event(title, content, start_date):
+    from datetime import datetime, date
+    if not title:
+        return u'没有标题哦'
+    if not content or len(content)<10:
+        return u'内容记得多写点呐'
+    if not start_date:
+        return u'准备约什么时候呢'
+    try:
+        d = date(*map(lambda y:int(y), start_date.split('-')))
+        if d < datetime.now().date():
+            return u'亲，咱不玩过去式'
+    except:
+        return u'时间格式不对哦'
+    return None
+
 def check_mail_access(uid, mail):
     if uid != mail.from_uid and uid != mail.to_uid:
         return False

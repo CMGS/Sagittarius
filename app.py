@@ -12,6 +12,7 @@ from models import *
 from views.api import api
 from views.mail import mail
 from views.oauth import oauth
+from views.event import event
 from views.people import people
 from views.account import account
 
@@ -40,6 +41,7 @@ app.config.update(
 oauth.register_blueprints(app)
 app.register_blueprint(account, url_prefix='/account')
 app.register_blueprint(people, url_prefix='/people')
+app.register_blueprint(event, url_prefix='/event')
 app.register_blueprint(mail, url_prefix='/mail')
 app.register_blueprint(api, url_prefix='/api')
 

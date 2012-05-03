@@ -2,11 +2,14 @@
 #coding:utf-8
 
 from flask import g
+from helper import Obj
 from redistore import redistore
 from sheep.api.cache import cache
 from validators import check_domain
 
+from config import PAGE_NUM
 from models.mail import Mail
+from models.group import Topic, Reply, Choice
 from models.account import User, Forget, OAuth
 
 def get_current_user():
@@ -59,6 +62,24 @@ def get_mail(mid):
         mid = int(mid)
         return Mail.query.get(mid)
     except:
+        return None
+
+@cache('event:list:{page}', 300)
+def get_event_page(page):
+    try:
+        page = int(page)
+        page_obj = Topic.get_event_page(page, per_page=PAGE_NUM)
+        list_page = Obj()
+        list_page.items = page_obj.items
+        list_page.has_next = page_obj.has_next
+        list_page.has_prev = page_obj.has_prev
+        list_page.next_num = page_obj.next_num
+        list_page.page = page_obj.page
+        list_page.pages = page_obj.pages
+        list_page.total = page_obj.total
+        list_page.iter_pages = xrange(1, page_obj.pages+1)
+        return list_page
+    except Exception, e:
         return None
 
 def get_mail_by(**kw):

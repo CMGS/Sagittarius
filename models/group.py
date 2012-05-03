@@ -3,6 +3,7 @@
 
 from datetime import datetime
 
+from sqlalchemy.sql.expression import desc
 from flaskext.sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
@@ -42,6 +43,12 @@ class Topic(db.Model):
         topic.finished = True
         db.session.add(topic)
         db.session.commit()
+
+    @staticmethod
+    def get_event_page(page, per_page):
+        today = datetime.now().date()
+        page_obj = Topic.query.filter(Topic.start_date>=today).order_by(desc(Topic.id)).paginate(page, per_page=per_page)
+        return page_obj
 
 class Reply(db.Model):
     __tablename__ = 'reply'
