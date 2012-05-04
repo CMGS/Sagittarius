@@ -41,7 +41,7 @@ class Topic(db.Model):
     @staticmethod
     def is_finished(topic):
         today = datetime.now().date()
-        if topic.start_date > today:
+        if topic.start_date < today:
             topic.finished = True
             db.session.add(topic)
             db.session.commit()

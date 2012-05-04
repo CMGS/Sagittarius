@@ -148,7 +148,7 @@ def view(event_id):
     reply_list = get_reply(topic.id, reply_page)
     reply = gen_replylist(reply_list, 'from_uid')
 
-    if user and eobj.finished:
+    if user and not eobj.finished:
         return render_template('view_event.html', event = eobj, \
                 visit_user_id = user.id, reply = reply, \
                 list_page = reply_list)
@@ -185,8 +185,11 @@ def reply(event_id):
 
     #clean cache
     backend.delete('event:%d:reply:count' % topic.id)
-    last_page = get_reply_count(topic.id) / PAGE_NUM + 1
+    mod = get_reply_count(topic.id) % PAGE_NUM
+    last_page = get_reply_count(topic.id) / PAGE_NUM + int(bool(mod))
     backend.delete('event:%d:reply:%d' % (topic.id, last_page))
+    if mod:
+        backend.delete('event:%d:reply:%d' % (topic.id, last_page - 1))
 
-    return redirect(url_for('event.view', event_id=event_id))
+    return redirect(url_for('event.view', event_id=event_id) + '?p=%d' % last_page)
 
