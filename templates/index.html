@@ -54,22 +54,23 @@
 {% endmacro %}
 
 {% macro render_pagination(list_page, url) %}
+{% set list_length = list_page.iter_pages|length %}
 <div class=pagination>
 {% if list_page.has_prev %}
     <a href="{{ url }}?p={{ list_page.page - 1 }}">&laquo; Prev</a>
 {% endif %}
-{% if list_page.iter_pages|length < 10 %}
+{% if list_length < 10 %}
     {{ render_pagination_nav(list_page.page, list_page.iter_pages, url) }}
 {% elif list_page.page < 6 %}
     {{ render_pagination_nav(list_page.page, range(1, 10), url) }}
     <strong>...</strong>
-{% elif list_page.page + 4 >= list_page.iter_pages|length and list_page.iter_pages|length < 15 %}
+{% elif list_page.page + 4 >= list_length and list_length < 15 %}
     {{ render_pagination_nav(list_page.page, list_page.iter_pages, url) }}
-{% elif list_page.page + 4 >= list_page.iter_pages|length and list_page.iter_pages|length >= 15 %}
+{% elif list_page.page + 4 >= list_length and list_length >= 15 %}
     <a href="{{ url }}?p=1">1</a>
     <a href="{{ url }}?p=2">2</a>
     <strong>...</strong>
-    {{ render_pagination_nav(list_page.page, range(list_page.iter_pages|length - 8, list_page.iter_pages|length + 1), url) }}
+    {{ render_pagination_nav(list_page.page, range(list_length - 8, list_length + 1), url) }}
 {% elif list_page.page + 4 < 15 %}
     {{ render_pagination_nav(list_page.page, range(1, list_page.page + 5), url) }}
     <strong>...</strong>
