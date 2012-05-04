@@ -16,23 +16,25 @@ event = Blueprint('event', __name__)
 
 def gen_eventlist(events, key):
     event_list = []
-    for event in events:
+    if not events:
+        return event_list
+    for event in events.items:
         from_user = get_user(getattr(event, key))
         e = Obj()
         setattr(e, key, from_user.name)
         setattr(e, key+'_url', from_user.domain or from_user.id)
         e.id = event.id
         e.title = event.title
+        e.create_time = event.create_time
         event_list.append(e)
     return event_list
 
 def gen_replylist(reply, key):
     if not reply:
         return None
-    reply = reply.items
     reply_list = []
     count = 1
-    for r in reply:
+    for r in reply.items:
         from_user = get_user(getattr(r, key))
         e = Obj()
         setattr(e, key, from_user.name)
@@ -52,6 +54,8 @@ def gen_event(topic):
     eobj.title = topic.title
     eobj.content = topic.content
     eobj.start_date = topic.start_date
+    Topic.is_finished(topic)
+    eobj.finished = topic.finished
     return eobj
 
 @event.route('/')
@@ -61,22 +65,18 @@ def index():
 @event.route('/list/')
 def event_list():
     page = request.args.get('p', '1')
-    try:
-        page = int(page)
-    except:
+    if not page.isdigit():
         raise abort(404)
 
     list_page = get_event_page(page)
 
     #cache items total num
-    total_events_num = count_topic()
+    total_events_num = get_topic_count()
     if total_events_num != list_page.total:
         backend.delete('event:list:%d' % page)
         list_page = get_event_page(page)
 
-    if not list_page:
-        return 'No events'
-    events = gen_eventlist(list_page.items, 'from_uid')
+    events = gen_eventlist(list_page, 'from_uid')
     return render_template('events.html', events = events, \
             list_page = list_page)
 
@@ -84,9 +84,7 @@ def event_list():
 @event.route('/mine/list/')
 def my_event_list():
     page = request.args.get('p', '1')
-    try:
-        page = int(page)
-    except:
+    if not page.isdigit():
         raise abort(404)
 
     user = get_current_user()
@@ -96,14 +94,12 @@ def my_event_list():
     list_page = get_mine_event_page(user.id, page)
 
     #cache items total num
-    total_events_num = count_user_topic(user.id)
+    total_events_num = get_user_topic_count(user.id)
     if total_events_num != list_page.total:
         backend.delete('event:list:%d:%d' % (user.id, page))
         list_page = get_mine_event_page(user.id, page)
 
-    if not list_page:
-        return 'No events'
-    events = gen_eventlist(list_page.items, 'from_uid')
+    events = gen_eventlist(list_page, 'from_uid')
     return render_template('events.html', events = events, \
             list_page = list_page)
 
@@ -152,7 +148,7 @@ def view(event_id):
     reply_list = get_reply(topic.id, reply_page)
     reply = gen_replylist(reply_list, 'from_uid')
 
-    if user:
+    if user and eobj.finished:
         return render_template('view_event.html', event = eobj, \
                 visit_user_id = user.id, reply = reply, \
                 list_page = reply_list)
@@ -167,7 +163,7 @@ def reply(event_id):
         return redirect(url_for(event.index))
 
     topic = get_topic(event_id)
-    if not topic:
+    if not topic or topic.finished:
         raise abort(404)
 
     content = request.form.get('content')
@@ -189,7 +185,7 @@ def reply(event_id):
 
     #clean cache
     backend.delete('event:%d:reply:count' % topic.id)
-    last_page = count_reply(topic.id) / PAGE_NUM + 1
+    last_page = get_reply_count(topic.id) / PAGE_NUM + 1
     backend.delete('event:%d:reply:%d' % (topic.id, last_page))
 
     return redirect(url_for('event.view', event_id=event_id))

@@ -3,6 +3,7 @@
 
 from flask import g
 from sheep.api.cache import cache
+from werkzeug.exceptions import NotFound
 
 from validators import check_domain
 from helper import gen_list_page_obj
@@ -40,20 +41,46 @@ def get_forget_by_stub(stub):
 def get_unread_mail_count(to_uid):
     return get_mail_by(to_uid=to_uid, is_read=0).count()
 
-@cache('mail:inbox:{uid}', 300)
-def get_mail_inbox_all(uid):
-    return get_mail_by(to_uid=uid).all()
+@cache('mail:inbox:count:{to_uid}', 300)
+def get_inbox_count(to_uid):
+    return get_mail_by(to_uid=to_uid).count()
 
-@cache('mail:outbox:{uid}', 300)
-def get_mail_outbox_all(uid):
-    return get_mail_by(from_uid=uid).all()
+@cache('mail:outbox:count:{from_uid}', 300)
+def get_outbox_count(from_uid):
+    return get_mail_by(from_uid=from_uid).count()
+
+@cache('mail:inbox:{uid}:{page}', 300)
+def get_inbox_mail(uid, page):
+    try:
+        page = int(page)
+        uid = int(uid)
+        page_obj = Mail.get_inbox_page(uid, page, per_page=PAGE_NUM)
+        list_page = gen_list_page_obj(page_obj)
+        return list_page
+    except NotFound, e:
+        raise e
+    except Exception, e:
+        return None
+
+@cache('mail:outbox:{uid}:{page}', 300)
+def get_outbox_mail(uid, page):
+    try:
+        page = int(page)
+        uid = int(uid)
+        page_obj = Mail.get_outbox_mail(uid, page, per_page=PAGE_NUM)
+        list_page = gen_list_page_obj(page_obj)
+        return list_page
+    except NotFound, e:
+        raise e
+    except Exception, e:
+        return None
 
 @cache('mail:view:{mid}', 300)
 def get_mail(mid):
     try:
         mid = int(mid)
-        return mail.query.get(mid)
-    except:
+        return Mail.query.get(mid)
+    except Exception, e:
         return None
 
 @cache('event:view:{tid}', 300)
@@ -71,6 +98,8 @@ def get_event_page(page):
         page_obj = Topic.get_event_page(page, per_page=PAGE_NUM)
         list_page = gen_list_page_obj(page_obj)
         return list_page
+    except NotFound, e:
+        raise e
     except Exception, e:
         return None
 
@@ -81,6 +110,8 @@ def get_mine_event_page(user_id, page):
         page_obj = Topic.get_user_event_page(user_id, page, per_page=PAGE_NUM)
         list_page = gen_list_page_obj(page_obj)
         return list_page
+    except NotFound, e:
+        raise e
     except Exception, e:
         return None
 
@@ -91,11 +122,13 @@ def get_reply(topic_id, page):
         page_obj = Reply.get_reply_page(topic_id, page, PAGE_NUM)
         list_page = gen_list_page_obj(page_obj)
         return list_page
+    except NotFound, e:
+        raise e
     except Exception, e:
         return None
 
 @cache('event:{topic_id}:reply:count', 300)
-def count_reply(topic_id):
+def get_reply_count(topic_id):
     try:
         topic_id = int(topic_id)
         return Reply.query.filter(Reply.topic_id==topic_id).count()
@@ -103,11 +136,11 @@ def count_reply(topic_id):
         return 0
 
 @cache('event:topic:count', 300)
-def count_topic():
+def get_topic_count():
     return Topic.count()
 
 @cache('event:topic:{uid}:count', 300)
-def count_user_topic(uid):
+def get_user_topic_count(uid):
     try:
         uid = int(uid)
         return Topic.query.filter(Topic.from_uid==uid).count()

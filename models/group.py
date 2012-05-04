@@ -39,10 +39,12 @@ class Topic(db.Model):
         db.session.commit()
 
     @staticmethod
-    def mark_as_finished(topic):
-        topic.finished = True
-        db.session.add(topic)
-        db.session.commit()
+    def is_finished(topic):
+        today = datetime.now().date()
+        if topic.start_date > today:
+            topic.finished = True
+            db.session.add(topic)
+            db.session.commit()
 
     @staticmethod
     def get_event_page(page, per_page):
@@ -88,19 +90,26 @@ class Reply(db.Model):
         page_obj = Reply.query.filter(Reply.topic_id==topic_id).paginate(page, per_page=per_page)
         return page_obj
 
+'''
+1, interesting
+2, choose
+3, not allow, expire
+'''
 class Choice(db.Model):
     __tablename__ = 'choice'
     id = db.Column('id', db.Integer, primary_key=True, autoincrement=True)
     topic_id = db.Column(db.Integer, index=True)
     choice_uid = db.Column(db.Integer, index=True)
+    status = db.Column(db.Integer, index=True)
 
-    def __init__(self, topic_id, choice_uid):
+    def __init__(self, topic_id, choice_uid, status):
         self.topic_id = topic_id
         self.choice_uid = choice_uid
+        self.status = status
 
     @staticmethod
     def choice(tid, uid):
-        c = Choice(tid, uid)
+        c = Choice(tid, uid, 1)
         db.session.add(c)
         db.session.commit()
 
