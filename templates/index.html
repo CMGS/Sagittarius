@@ -42,3 +42,21 @@
     </div>
     {% endif %}
 {% endblock %}
+
+{% macro render_pagination(list_page, url) %}
+<div class=pagination>
+{% if list_page.has_prev %}
+    <a href="{{ url }}?p={{ list_page.page - 1 }}">&laquo; Prev</a>
+{% endif %}
+{% for page in list_page.iter_pages %}
+    {% if page != list_page.page %}
+    <a href="{{ url }}?p={{ page }}">{{ page }}</a>
+    {% else %}
+    <strong>{{ page }}</strong>
+    {% endif %}
+{% endfor %}
+{% if list_page.has_next %}
+    <a href="{{ url }}?p={{ list_page.page + 1 }}">Next &raquo;</a>
+{% endif %}
+</div>
+{% endmacro %}

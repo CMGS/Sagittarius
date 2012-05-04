@@ -5,6 +5,7 @@ import logging
 
 from utils import *
 from models.group import *
+from config import PAGE_NUM
 from sheep.api.cache import backend
 from flask import render_template, redirect, \
     request, url_for, g, Blueprint, abort
@@ -55,11 +56,16 @@ def gen_event(topic):
 
 @event.route('/')
 def index():
-    return event_list(1)
+    return event_list()
 
-@event.route('/list', defaults={'page': 1})
-@event.route('/list/<int:page>')
-def event_list(page):
+@event.route('/list/')
+def event_list():
+    page = request.args.get('p', '1')
+    try:
+        page = int(page)
+    except:
+        raise abort(404)
+
     list_page = get_event_page(page)
 
     #cache items total num
@@ -74,10 +80,15 @@ def event_list(page):
     return render_template('events.html', events = events, \
             list_page = list_page)
 
-@event.route('/mine', defaults={'page': 1})
-@event.route('/mine/list', defaults={'page': 1})
-@event.route('/mine/list/<int:page>')
-def my_event_list(page):
+@event.route('/mine/')
+@event.route('/mine/list/')
+def my_event_list():
+    page = request.args.get('p', '1')
+    try:
+        page = int(page)
+    except:
+        raise abort(404)
+
     user = get_current_user()
     if not user:
         return redirect(url_for('event.index'))
@@ -127,7 +138,7 @@ def write():
 
     return redirect(url_for('event.index'))
 
-@event.route('/view/<event_id>')
+@event.route('/view/<event_id>/')
 def view(event_id):
     user = get_current_user()
     topic = get_topic(event_id)
@@ -139,10 +150,6 @@ def view(event_id):
 
     eobj = gen_event(topic)
     reply_list = get_reply(topic.id, reply_page)
-    #clean cache when update
-    if reply_list and count_reply(topic.id) != reply_list.total:
-        backend.delete('event:%d:reply:%s' % (topic.id, reply_page))
-        reply_list = get_reply(topic.id, reply_page)
     reply = gen_replylist(reply_list, 'from_uid')
 
     if user:
@@ -181,8 +188,9 @@ def reply(event_id):
                  from_uid = visit_user.id)
 
     #clean cache
-    backend.delete('event:%d:reply:1' % topic.id)
     backend.delete('event:%d:reply:count' % topic.id)
+    last_page = count_reply(topic.id) / PAGE_NUM + 1
+    backend.delete('event:%d:reply:%d' % (topic.id, last_page))
 
     return redirect(url_for('event.view', event_id=event_id))
 

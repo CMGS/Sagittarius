@@ -29,21 +29,7 @@
     </tr>
 {% endfor %}
 </table>
-<div class=pagination>
-{% if list_page.has_prev %}
-    <a href="/event/view/{{event.id}}?p={{ list_page.page - 1 }}">&laquo; Prev</a>
-{% endif %}
-{% for page in list_page.iter_pages %}
-    {% if page != list_page.page %}
-    <a href="/event/view/{{ event.id }}?p={{ page }}">{{ page }}</a>
-    {% else %}
-    <strong>{{ page }}</strong>
-    {% endif %}
-{% endfor %}
-{% if list_page.has_next %}
-    <a href="/event/view/{{ event.id }}?p={{ list_page.page + 1 }}">Next &raquo;</a>
-{% endif %}
-</div>
+{{ render_pagination(list_page, '/event/view/%d/' % event.id) }}
 {% else %}
 <p>No comments</p>
 {% endif %}
