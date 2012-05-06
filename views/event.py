@@ -15,9 +15,8 @@ logger = logging.getLogger(__name__)
 event = Blueprint('event', __name__)
 
 def gen_eventlist(events, key):
-    event_list = []
     if not events:
-        return event_list
+        return
     for event in events.items:
         from_user = get_user(getattr(event, key))
         e = Obj()
@@ -26,13 +25,11 @@ def gen_eventlist(events, key):
         e.id = event.id
         e.title = event.title
         e.create_time = event.create_time
-        event_list.append(e)
-    return event_list
+        yield e
 
 def gen_replylist(reply, key):
     if not reply:
-        return None
-    reply_list = []
+        return
     count = 1
     for r in reply.items:
         from_user = get_user(getattr(r, key))
@@ -42,8 +39,18 @@ def gen_replylist(reply, key):
         e.num = count
         e.create_time = r.create_time
         e.content = r.content
-        reply_list.append(e)
-    return reply_list
+        yield e
+
+def gen_userlist(orig_list):
+    if not orig_list:
+        return
+    for choice in orig_list:
+        u = Obj()
+        user = get_user(choice.from_uid)
+        u.name = user.name
+        u.from_uid_url = user.domain or user.id
+        u.id = user.id
+        yield u
 
 def gen_event(topic):
     eobj = Obj()
@@ -54,7 +61,9 @@ def gen_event(topic):
     eobj.title = topic.title
     eobj.content = topic.content
     eobj.start_date = topic.start_date
-    Topic.is_finished(topic)
+    is_finished = topic.is_finished()
+    if is_finished:
+        backend.delete('event:view:%d' % eobj.id)
     eobj.finished = topic.finished
     return eobj
 
@@ -134,35 +143,60 @@ def write():
 
     return redirect(url_for('event.index'))
 
-@event.route('/view/<event_id>/')
-def view(event_id):
-    user = get_current_user()
-    topic = get_topic(event_id)
-    reply_page = request.args.get('p', '1')
+@event.route('/view/<int:tid>/')
+def view(tid):
+    topic = get_topic(tid)
+    page = request.args.get('p', '1')
 
-    if not topic or not reply_page.isdigit():
+    if not topic or not page.isdigit():
         raise abort(404)
-    reply_page = int(reply_page)
+    page = int(page)
 
     eobj = gen_event(topic)
-    reply_list = get_reply(topic.id, reply_page)
+    reply_list = get_reply(topic.id, page)
     reply = gen_replylist(reply_list, 'from_uid')
+    user = get_current_user()
+    host = get_user(topic.from_uid)
 
-    if user and not eobj.finished:
-        return render_template('view_event.html', event = eobj, \
-                visit_user_id = user.id, reply = reply, \
-                list_page = reply_list)
-    else:
-        return render_template('view_event.html', event = eobj, \
-                diable_reply = 1, reply = reply, list_page = reply_list)
+    interest = request.args.get('interest', None)
+    if interest and not user:
+        return redirect(url_for('account.login')+\
+                '?redirect=%s' % url_for('event.view', tid=eobj.id)+'?interest=%s' % interest)
 
-@event.route('/reply/<int:event_id>', methods=['POST'])
-def reply(event_id):
+    is_interest = get_is_interest(topic.id, user.id)
+    if _user_control_interest(interest, eobj, user, is_interest):
+        is_interest = get_is_interest(topic.id, user.id)
+
+    interest = get_interest_users(eobj.id)
+    select = get_select_users(eobj.id)
+    interest_list = None
+    if not eobj.finished:
+        interest_list = gen_userlist(interest)
+    select_list = gen_userlist(select)
+
+    return render_template('view_event.html', event = eobj, \
+            visit_user = user, reply = reply, finished = eobj.finished, \
+            list_page = reply_list, select = select, interest = interest, \
+            select_list = select_list, interest_list = interest_list, \
+            is_host = user.id == host.id, is_interest = is_interest)
+
+@event.route('/select/<int:tid>/<int:uid>/')
+def select(tid, uid):
+    _host_control_user('select', tid, uid)
+    return redirect(url_for('event.view', tid=tid))
+
+@event.route('/unselect/<int:tid>/<int:uid>/')
+def unselect(tid, uid):
+    _host_control_user('unselect', tid, uid)
+    return redirect(url_for('event.view', tid=tid))
+
+@event.route('/reply/<int:tid>', methods=['POST'])
+def reply(tid):
     user = get_current_user()
     if not user:
         return redirect(url_for(event.index))
 
-    topic = get_topic(event_id)
+    topic = get_topic(tid)
     if not topic or topic.finished:
         raise abort(404)
 
@@ -191,5 +225,45 @@ def reply(event_id):
     if mod:
         backend.delete('event:%d:reply:%d' % (topic.id, last_page - 1))
 
-    return redirect(url_for('event.view', event_id=event_id) + '?p=%d' % last_page)
+    return redirect(url_for('event.view', tid=tid) + '?p=%d' % last_page)
+
+def _user_control_interest(interest, topic, user, is_interest):
+    if topic.finished:
+        return False
+    if interest == 'want' and user and not is_interest:
+        Choice.create_interest(topic.id, user.id)
+    elif interest == 'cancel' and user and is_interest:
+        is_interest.cancel()
+    else:
+        return False
+    backend.delete('event:user:interest:%d' % user.id)
+    backend.delete('event:choice:interest:%d' % topic.id)
+    return True
+
+def _host_control_user(method, tid, uid):
+    check = _check_host(tid, uid)
+    if check and not check[0].finished:
+        topic ,is_interest = check
+        _mark_status(method, topic.id, is_interest)
+
+def _mark_status(method, tid, cobj):
+    if method == 'select' and cobj.status == 1:
+        Choice.select(cobj)
+    elif method == 'unselect' and cobj.status == 2:
+        Choice.unselect(cobj)
+    else:
+        raise abort(404)
+    backend.delete('event:choice:select:%d' % tid)
+    backend.delete('event:choice:interest:%d' % tid)
+    backend.delete('event:user:interest:%d' % cobj.from_uid)
+
+def _check_host(tid, uid):
+    topic = get_topic(tid)
+    user = get_current_user()
+    applicant = get_user(uid)
+    is_interest = get_is_interest(topic.id, user.id)
+    if user and topic and applicant and is_interest and \
+            user.id == topic.from_uid:
+        return topic, is_interest
+    return False
 

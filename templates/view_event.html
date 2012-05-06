@@ -33,7 +33,43 @@
 {% else %}
 <p>No comments</p>
 {% endif %}
-{%if not diable_reply %}
+{% if not is_interest and not finished %}
+<a href="/event/view/{{ event.id }}/?interest=want">想参加</a>
+{% elif is_interest and not finished %}
+<a href="/event/view/{{ event.id }}/?interest=cancel">取消</a>
+{% endif %}
+
+{% if select %}
+    <table class="select">
+    {% for c in select_list %}
+        <tr>
+            <td>用户: <a href="/people/{{ c.from_uid_url }}">{{ c.name }}</a></td>
+            {% if is_host and not finished %}
+            <td><a href="/event/unselect/{{ event.id }}/{{ c.id }}/">取消</a></td>
+            {% endif %}
+        </tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <p>No select</p>
+{% endif %}
+
+{% if interest and interest_list and not finished %}
+    <table>
+    {% for i in interest_list %}
+        <tr>
+            <td>用户: <a href="/people/{{ i.from_uid_url }}">{{ i.name }}</a></td>
+            {% if is_host %}
+            <td><a href="/event/select/{{ event.id }}/{{ i.id }}/">邀请</a></td>
+            {% endif %}
+        </tr>
+    {% endfor %}
+    </table>
+{% elif not finished %}
+    <p>No interest</p>
+{% endif %}
+
+{% if visit_user and not finished %}
 <form method="post" action="/event/reply/{{ event.id }}">
   <ul>
     <li>
@@ -45,7 +81,7 @@
     </li>
   </ul>
   <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-  <input type="hidden" name="_visit_user" value="{{ visit_user_id }}">
+  <input type="hidden" name="_visit_user" value="{{ visit_user.id }}">
 </form>
 {% if error %}
 <span>{{ error }}</span>

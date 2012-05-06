@@ -19,9 +19,8 @@ logger = logging.getLogger(__name__)
 mail = Blueprint('mail', __name__)
 
 def gen_maillist(mails, key, pos=0):
-    mail_list = []
     if not mails:
-        return mail_list
+        return
     for mail in mails.items:
         from_user = get_user(getattr(mail, key))
         if not from_user or not int(mail.is_show[pos]):
@@ -32,8 +31,7 @@ def gen_maillist(mails, key, pos=0):
         m.id = mail.id
         m.title = mail.title
         m.is_read = mail.is_read
-        mail_list.append(m)
-    return mail_list
+        yield m
 
 @mail.route('/')
 def index():

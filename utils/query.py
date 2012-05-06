@@ -103,11 +103,11 @@ def get_event_page(page):
     except Exception, e:
         return None
 
-@cache('event:list:{user_id}:{page}', 100)
-def get_mine_event_page(user_id, page):
+@cache('event:list:{uid}:{page}', 100)
+def get_mine_event_page(uid, page):
     try:
-        user_id = int(user_id)
-        page_obj = Topic.get_user_event_page(user_id, page, per_page=PAGE_NUM)
+        uid = int(uid)
+        page_obj = Topic.get_user_event_page(uid, page, per_page=PAGE_NUM)
         list_page = gen_list_page_obj(page_obj)
         return list_page
     except NotFound, e:
@@ -146,6 +146,21 @@ def get_user_topic_count(uid):
         return Topic.query.filter(Topic.from_uid==uid).count()
     except Exception, e:
         return 0
+
+@cache('event:choice:interest:{tid}', 300)
+def get_interest_users(tid):
+    return get_choice_by(topic_id=tid, status=1).all()
+
+@cache('event:choice:select:{tid}', 300)
+def get_select_users(tid):
+    return get_choice_by(topic_id=tid, status=2).all()
+
+@cache('event:user:interest:{uid}', 300)
+def get_is_interest(tid, uid):
+    return get_choice_by(topic_id=tid, from_uid=uid).first()
+
+def get_choice_by(**kw):
+    return Choice.query.filter_by(**kw)
 
 def get_mail_by(**kw):
     return Mail.query.filter_by(**kw)

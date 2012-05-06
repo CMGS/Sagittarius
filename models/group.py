@@ -3,8 +3,10 @@
 
 from datetime import datetime
 
-from sqlalchemy.sql.expression import desc
 from flaskext.sqlalchemy import SQLAlchemy
+
+from sqlalchemy.sql.expression import desc
+from sqlalchemy.schema import UniqueConstraint
 
 db = SQLAlchemy()
 def init_group_db(app):
@@ -38,13 +40,14 @@ class Topic(db.Model):
         db.session.add(topic)
         db.session.commit()
 
-    @staticmethod
-    def is_finished(topic):
+    def is_finished(self):
         today = datetime.now().date()
-        if topic.start_date < today:
-            topic.finished = True
-            db.session.add(topic)
+        if self.start_date < today:
+            self.finished = True
+            db.session.add(self)
             db.session.commit()
+            return True
+        return False
 
     @staticmethod
     def get_event_page(page, per_page):
@@ -99,17 +102,41 @@ class Choice(db.Model):
     __tablename__ = 'choice'
     id = db.Column('id', db.Integer, primary_key=True, autoincrement=True)
     topic_id = db.Column(db.Integer, index=True)
-    choice_uid = db.Column(db.Integer, index=True)
-    status = db.Column(db.Integer, index=True)
+    from_uid = db.Column(db.Integer, index=True)
+    status = db.Column(db.Integer, index=True, default=1)
 
-    def __init__(self, topic_id, choice_uid, status):
+    def __init__(self, topic_id, from_uid, status):
         self.topic_id = topic_id
-        self.choice_uid = choice_uid
+        self.from_uid = from_uid
         self.status = status
 
     @staticmethod
-    def choice(tid, uid):
-        c = Choice(tid, uid, 1)
-        db.session.add(c)
+    def create_interest(tid, uid):
+        try:
+            c = Choice(tid, uid, 1)
+            db.session.add(c)
+            db.session.commit()
+            return True
+        except Exception, e:
+            if getattr(e, 'orig') and e.orig[0] == 1062:
+                db.session.rollback()
+                return False
+            raise e
+
+    def cancel(self):
+        db.session.delete(self)
         db.session.commit()
 
+    @staticmethod
+    def select(choice):
+        choice.status = 2
+        db.session.add(choice)
+        db.session.commit()
+
+    @staticmethod
+    def unselect(choice):
+        choice.status = 1
+        db.session.add(choice)
+        db.session.commit()
+
+UniqueConstraint(Choice.topic_id, Choice.from_uid, name='uix_tid_uid')
