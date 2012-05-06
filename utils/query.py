@@ -104,10 +104,22 @@ def get_event_page(page):
         return None
 
 @cache('event:list:{uid}:{page}', 100)
-def get_mine_event_page(uid, page):
+def get_user_event_page(uid, page):
     try:
         uid = int(uid)
         page_obj = Topic.get_user_event_page(uid, page, per_page=PAGE_NUM)
+        list_page = gen_list_page_obj(page_obj)
+        return list_page
+    except NotFound, e:
+        raise e
+    except Exception, e:
+        return None
+
+@cache('event:interest:list:{uid}:{page}', 300)
+def get_user_interest(uid, page):
+    try:
+        uid = int(uid)
+        page_obj = Choice.get_user_events(uid, page, per_page=PAGE_NUM)
         list_page = gen_list_page_obj(page_obj)
         return list_page
     except NotFound, e:
@@ -147,15 +159,23 @@ def get_user_topic_count(uid):
     except Exception, e:
         return 0
 
-@cache('event:choice:interest:{tid}', 300)
+@cache('event:topic:interest:{uid}:count', 300)
+def get_user_interest_topic_count(uid):
+    try:
+        uid = int(uid)
+        return Choice.query.filter(Choice.from_uid==uid).count()
+    except Exception, e:
+        return 0
+
+@cache('event:interest:{tid}', 300)
 def get_interest_users(tid):
     return get_choice_by(topic_id=tid, status=1).all()
 
-@cache('event:choice:select:{tid}', 300)
+@cache('event:select:{tid}', 300)
 def get_select_users(tid):
     return get_choice_by(topic_id=tid, status=2).all()
 
-@cache('event:user:interest:{uid}', 300)
+@cache('event:{uid}:interest:{tid}', 300)
 def get_is_interest(tid, uid):
     return get_choice_by(topic_id=tid, from_uid=uid).first()
 

@@ -127,6 +127,16 @@ class Choice(db.Model):
         db.session.delete(self)
         db.session.commit()
 
+    def is_interest(self):
+        if self.status == 1:
+            return True
+        return False
+
+    def is_select(self):
+        if self.status == 2:
+            return True
+        return False
+
     @staticmethod
     def select(choice):
         choice.status = 2
@@ -138,5 +148,10 @@ class Choice(db.Model):
         choice.status = 1
         db.session.add(choice)
         db.session.commit()
+
+    @staticmethod
+    def get_user_events(uid, page, per_page):
+        page_obj = Choice.query.filter_by(from_uid=uid).order_by(desc(Choice.id)).paginate(page, per_page=per_page)
+        return page_obj
 
 UniqueConstraint(Choice.topic_id, Choice.from_uid, name='uix_tid_uid')

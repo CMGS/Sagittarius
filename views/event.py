@@ -87,7 +87,7 @@ def event_list():
 
     events = gen_eventlist(list_page, 'from_uid')
     return render_template('events.html', events = events, \
-            list_page = list_page)
+            list_page = list_page, url = url_for('event.list'))
 
 @event.route('/mine/')
 @event.route('/mine/list/')
@@ -95,12 +95,13 @@ def my_event_list():
     page = request.args.get('p', '1')
     if not page.isdigit():
         raise abort(404)
+    page = int(page)
 
     user = get_current_user()
     if not user:
         return redirect(url_for('event.index'))
 
-    list_page = get_mine_event_page(user.id, page)
+    list_page = get_user_event_page(user.id, page)
 
     #cache items total num
     total_events_num = get_user_topic_count(user.id)
@@ -110,7 +111,36 @@ def my_event_list():
 
     events = gen_eventlist(list_page, 'from_uid')
     return render_template('events.html', events = events, \
-            list_page = list_page)
+            list_page = list_page, url = url_for('event.my_event_list'))
+
+@event.route('/mine/interest/')
+@event.route('/mine/interest/list/')
+def my_interest_list():
+    page = request.args.get('p', '1')
+    if not page.isdigit():
+        raise abort(404)
+    page = int(page)
+
+    user = get_current_user()
+    if not user:
+        return redirect(url_for('event.index'))
+
+    list_page = get_user_interest(user.id, page)
+
+    #cache items total num
+    total_events_num = get_user_interest_topic_count(user.id)
+    if total_events_num != list_page.total:
+        backend.delete('event:interest:list:%d:%d' % (user.id, page))
+        list_page = get_user_interest(user.id, page)
+    if not list_page:
+        raise abort(404)
+
+    events = (get_topic(c.topic_id) for c in list_page.items)
+    list_page.items = events
+    events = gen_eventlist(list_page, 'from_uid')
+
+    return render_template('events.html', events = events, \
+            list_page = list_page, url = url_for('event.my_interest_list'))
 
 @event.route('/write', methods=['GET', 'POST'])
 def write():
@@ -236,8 +266,9 @@ def _user_control_interest(interest, topic, user, is_interest):
         is_interest.cancel()
     else:
         return False
-    backend.delete('event:user:interest:%d' % user.id)
-    backend.delete('event:choice:interest:%d' % topic.id)
+    backend.delete('event:topic:interest:%d:count' % user.id)
+    backend.delete('event:%d:interest:%d' % (user.id, topic.id))
+    backend.delete('event:interest:%d' % topic.id)
     return True
 
 def _host_control_user(method, tid, uid):
@@ -247,15 +278,15 @@ def _host_control_user(method, tid, uid):
         _mark_status(method, topic.id, is_interest)
 
 def _mark_status(method, tid, cobj):
-    if method == 'select' and cobj.status == 1:
+    if method == 'select' and cobj.is_interest():
         Choice.select(cobj)
-    elif method == 'unselect' and cobj.status == 2:
+    elif method == 'unselect' and cobj.is_select():
         Choice.unselect(cobj)
     else:
         raise abort(404)
-    backend.delete('event:choice:select:%d' % tid)
-    backend.delete('event:choice:interest:%d' % tid)
-    backend.delete('event:user:interest:%d' % cobj.from_uid)
+    backend.delete('event:select:%d' % tid)
+    backend.delete('event:interest:%d' % tid)
+    backend.delete('event:%d:interest:%d' % (cobj.from_uid, tid))
 
 def _check_host(tid, uid):
     topic = get_topic(tid)
