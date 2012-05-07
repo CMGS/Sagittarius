@@ -1,0 +1,24 @@
+{% extends "index.html" %}
+
+{%block content %}
+<div class="hero-unit">
+    <legend>完善用户信息</legend>
+    <form action="/account/register/" method="post">
+        <label for="email">邮箱:</label>
+        <input type="text" size="20" tabindex='1' value="" id="email" name="email">
+        <label for="password">密码:</label>
+        <input type="password" size="20" tabindex='2' value="" id="password" name="password">
+        <label for="name">昵称:</label>
+        <input type="text" size="20" tabindex='3' value="" id="name" name="name">
+        <br />
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" tabindex='4' class="btn btn-primary">确认提交</button>
+    </form>
+    {% if error %}
+    <div class="alert alert-error">
+        <button class="close" data-dismiss="alert">×</button>
+        <strong>Oops!</strong> {{ error }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

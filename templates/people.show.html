@@ -1,0 +1,19 @@
+{% extends "index.html" %}
+
+{%block content %}
+<div class="hero-unit">
+    <h1>Hello, {{ visit_user.name }}
+        <a class="btn btn-small btn-info" href="/mail/write?to={{ visit_user.id }}"><i class="icon-envelope icon-white"></i> 发邮件</a>
+    </h1>
+    <br />
+    {% if current_user.id == visit_user.id %}
+        <p>你的E-mail是 <a href="mailto:{{ visit_user.email }}">{{ visit_user.email }}</a></p>
+        <p>
+            <a class="btn btn-primary" href="/account/setting/">设置</a>
+            <a class="btn btn-primary" href="/account/logout/">登出</a>
+        </p>
+    {% else %}
+        <p>他的E-mail是 <a href="mailto:{{ visit_user.email }}">{{ visit_user.email }}</a></p>
+    {% endif %}
+</div>
+{% endblock %}

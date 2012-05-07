@@ -1,0 +1,31 @@
+{% extends "index.html" %}
+{% from "macros.html" import render_pagination %}
+
+{% block nav %}
+<li><a href="/">首页</a></li>
+<li class="active"><a href="/event/">活动列表</a></li>
+<li><a href="/event/write">发布活动</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="hero-unit">
+    <legend>正在进行的活动</legend>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <td>创建人</td>
+                <td>标题</td>
+            </tr>
+        </thead>
+        <tbody>
+        {% for event in events %}
+        <tr>
+            <td><a href="/people/{{ event.from_uid_url }}">{{ event.from_uid }}</a></td>
+            <td><a href="/event/view/{{ event.id }}">{{ event.title }}</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    <table>
+{{ render_pagination(list_page, '/event/list') }}
+</div>
+{% endblock %}

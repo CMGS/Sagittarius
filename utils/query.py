@@ -67,7 +67,7 @@ def get_outbox_mail(uid, page):
     try:
         page = int(page)
         uid = int(uid)
-        page_obj = Mail.get_outbox_mail(uid, page, per_page=PAGE_NUM)
+        page_obj = Mail.get_outbox_page(uid, page, per_page=PAGE_NUM)
         list_page = gen_list_page_obj(page_obj)
         return list_page
     except NotFound, e:

@@ -1,0 +1,22 @@
+{% extends "index.html" %}
+
+{%block content %}
+<div class="hero-unit">
+    <legend>登陆</legend>
+    <form action="{{ login_url }}" method="post">
+        <label for="email">邮箱:</label>
+        <input type="text" size="20" tabindex='1' value="" id="email" name="email">
+        <label for="password">密码:</label>
+        <input type="password" size="20" tabindex='2' value="" id="password" name="password">
+        <br />
+        <button type="submit" tabindex="3" class="btn btn-primary">登录</button>
+        <a href="/douban/login" class="btn btn-primary">用豆瓣登陆</a>
+    </form>
+    {% if error %}
+    <div class="alert alert-error">
+        <button class="close" data-dismiss="alert">×</button>
+        <strong>Oops!</strong> {{ error }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

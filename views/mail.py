@@ -57,7 +57,7 @@ def inbox():
 
     mails = gen_maillist(list_page, 'from_uid')
 
-    return render_template('inbox.html', mails = mails, \
+    return render_template('mail.inbox.html', mails = mails, \
             list_page = list_page)
 
 @mail.route('/outbox')
@@ -76,11 +76,11 @@ def outbox():
     total_mail_num = get_outbox_count(user.id)
     if total_mail_num != list_page.total:
         backend.delete('mail:outbox:%d:%d' % (user.id, int(page)))
-        list_page = get_inbox_mail(user.id, page)
+        list_page = get_outbox_mail(user.id, page)
 
     mails = gen_maillist(list_page, 'to_uid', -1)
 
-    return render_template('outbox.html', mails = mails, \
+    return render_template('mail.outbox.html', mails = mails, \
             list_page = list_page)
 
 @mail.route('/view/<mail_id>')
@@ -132,9 +132,9 @@ def view(mail_id):
     mobj.content = mail.content
 
     if box == 'inbox':
-        return render_template('view.html', mail = mobj, reply=1)
+        return render_template('mail.read.html', mail = mobj, reply=1)
     else:
-        return render_template('view.html', mail = mobj)
+        return render_template('mail.read.html', mail = mobj)
 
 @mail.route('/delete/<box>/<mail_id>')
 def delete(box, mail_id):
@@ -179,7 +179,7 @@ def write():
         who = get_user(to_uid)
         if not to_uid or not who:
             return redirect(url_for('mail.index'))
-        return render_template('write.html', who=who, \
+        return render_template('mail.write.html', who=who, \
                 title=title, content=content)
 
     to_uid = request.form.get('to_uid')
@@ -189,7 +189,7 @@ def write():
 
     error = check_mail(who, title, content)
     if error is not None:
-        return render_template('write.html', who=who, \
+        return render_template('mail.write.html', who=who, \
                 title=title, content=content, error=error)
 
     Mail.create(from_uid = user.id,

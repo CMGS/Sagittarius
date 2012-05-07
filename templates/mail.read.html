@@ -1,0 +1,18 @@
+{% extends "index.html" %}
+
+{%block content %}
+<div class="hero-unit">
+    <legend>{{ mail.title }}</legend>
+    <h6>by: <a href="/people/{{ mail.from_uid_url }}">{{ mail.from_uid }}</a></h6>
+    <br />
+    <pre>{{ mail.content }}</pre>
+    <p>
+    {% if reply %}
+        <a class="btn btn-primary" href="/mail/write?reply={{ mail.id }}">回复</a>
+    {% endif %}
+        <a class="btn btn-primary" href="/mail/delete/{{ mail.delete }}">删除</a>
+        <a class="btn btn-primary" href="/mail/">收件箱</a>
+        <a class="btn btn-primary" href="/mail/outbox">发件箱</a>
+    </p>
+</div>
+{% endblock %}

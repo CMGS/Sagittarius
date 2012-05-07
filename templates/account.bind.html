@@ -1,0 +1,12 @@
+{% extends "index.html" %}
+
+{%block content %}
+<div class="hero-unit">
+    <legend>绑定账号</legend>
+    <form method="post" action="/account/bind/">
+      <input type="hidden" value="{{ csrf_token() }}" name="_csrf_token">
+      <input class="btn btn-primary" type="submit" value="绑定" name="allow" />
+      <input class="btn btn-primary" type="submit" value="取消" name="cancel" />
+    </form>
+</div>
+{% endblock %}

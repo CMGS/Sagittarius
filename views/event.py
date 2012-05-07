@@ -86,8 +86,8 @@ def event_list():
         list_page = get_event_page(page)
 
     events = gen_eventlist(list_page, 'from_uid')
-    return render_template('events.html', events = events, \
-            list_page = list_page, url = url_for('event.list'))
+    return render_template('event.list.html', events = events, \
+            list_page = list_page)
 
 @event.route('/mine/')
 @event.route('/mine/list/')
@@ -110,7 +110,7 @@ def my_event_list():
         list_page = get_mine_event_page(user.id, page)
 
     events = gen_eventlist(list_page, 'from_uid')
-    return render_template('events.html', events = events, \
+    return render_template('event.list.html', events = events, \
             list_page = list_page, url = url_for('event.my_event_list'))
 
 @event.route('/mine/interest/')
@@ -139,7 +139,7 @@ def my_interest_list():
     list_page.items = events
     events = gen_eventlist(list_page, 'from_uid')
 
-    return render_template('events.html', events = events, \
+    return render_template('event.list.html', events = events, \
             list_page = list_page, url = url_for('event.my_interest_list'))
 
 @event.route('/write', methods=['GET', 'POST'])
@@ -149,7 +149,7 @@ def write():
         return redirect(url_for('account.login'))
 
     if request.method == 'GET':
-        return render_template('new_event.html')
+        return render_template('event.new.html')
 
     title = request.form.get('title')
     content = request.form.get('content')
@@ -157,7 +157,7 @@ def write():
 
     error = check_new_event(title, content, start_date)
     if error is not None:
-        return render_template('new_event.html', \
+        return render_template('event.new.html', \
                 content = content, error=error, \
                 title = title, start_date = start_date)
 
@@ -204,7 +204,7 @@ def view(tid):
         interest_list = gen_userlist(interest)
     select_list = gen_userlist(select)
 
-    return render_template('view_event.html', event = eobj, \
+    return render_template('event.view.html', event = eobj, \
             visit_user = user, reply = reply, finished = eobj.finished, \
             list_page = reply_list, select = select, interest = interest, \
             select_list = select_list, interest_list = interest_list, \
@@ -240,7 +240,7 @@ def reply(tid):
 
     if error is not None:
         eobj = gen_event(topic)
-        return render_template('view_event.html', \
+        return render_template('event.view.html', \
                 content = content, error=error, event=eobj)
 
     Reply.create(topic_id = topic.id,

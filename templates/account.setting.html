@@ -1,0 +1,33 @@
+{% extends "index.html" %}
+
+{%block content %}
+<div class="hero-unit">
+    <legend>账号设置</legend>
+    <form action="/account/setting/" method="post">
+        <label for="password">密码:</label>
+        <input type="password" size="20" tabindex='1' value="" id="password" name="password">
+        <label for="domain">短域名:</label>
+        {% if not user.domain %}
+            <input type="text" size="10" tabindex='2' value="" id="domain" name="domain">
+        {% else %}
+            <input class="disabled" id="disabledInput" type="text" placeholder="{{ user.domain }}" disabled="">
+        {% endif %}
+        <label for="name">昵称:</label>
+        <input type="text" size="20" tabindex='3' value="{{ user.name }}" id="name" name="name">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <br />
+        <button class="btn btn-primary" type="submit" tabindex='4'>更新</button>
+        {% if not user.domain %}
+            <a class="btn btn-primary" href="/people/{{ user.id }}/">返回</a>
+        {% else %}
+            <a class="btn btn-primary" href="/people/{{ user.domain }}/">返回</a>
+        {% endif %}
+    </form>
+    {% if error %}
+    <div class="alert alert-error">
+        <button class="close" data-dismiss="alert">×</button>
+        <strong>Oops!</strong> {{ error }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

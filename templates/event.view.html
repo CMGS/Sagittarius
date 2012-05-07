@@ -1,0 +1,88 @@
+{% extends "index.html" %}
+{% from "macros.html" import render_pagination %}
+
+{%block content %}
+<div class="hero-unit">
+    <legend>{{ event.title }}</legend>
+    <h6>by: <a href="/people/{{ event.from_uid_url }}">{{ event.from_uid }}</a></h6>
+    <blockquote>{{ event.start_date }}</blockquote>
+    <br />
+    <pre>{{ event.content }}</pre>
+    {% if reply %}
+        <table class="table table-striped">
+        {% for r in reply %}
+            <tr>
+                <td>时间: {{ r.create_time }}</td>
+                <td>内容: {{ r.content }}</td>
+                <td>作者: <a href="/people/{{ r.from_uid_url }}">{{ r.from_uid }}</a></td>
+            </tr>
+        {% endfor %}
+        </table>
+        {{ render_pagination(list_page, '/event/view/%d/' % event.id) }}
+    {% else %}
+        <div class="alert alert-info">
+            来抢沙发吧～
+        </div>
+    {% endif %}
+
+    {% if select %}
+        <table class="table table-striped">
+        {% for c in select_list %}
+            <tr>
+                <td>用户: <a href="/people/{{ c.from_uid_url }}">{{ c.name }}</a></td>
+                {% if is_host and not finished %}
+                <td><a href="/event/unselect/{{ event.id }}/{{ c.id }}/">取消</a></td>
+                {% endif %}
+            </tr>
+        {% endfor %}
+        </table>
+    {% else %}
+        <div class="alert alert-info">
+            暂时木有人被邀请哦～
+        </div>
+    {% endif %}
+
+    {% if interest and interest_list and not finished %}
+        <table class="table table-striped">
+        {% for i in interest_list %}
+            <tr>
+                <td>用户: <a href="/people/{{ i.from_uid_url }}">{{ i.name }}</a></td>
+                {% if is_host %}
+                <td><a href="/event/select/{{ event.id }}/{{ i.id }}/">邀请</a></td>
+                {% endif %}
+            </tr>
+        {% endfor %}
+        </table>
+    {% elif not finished %}
+        <div class="alert alert-info">
+            暂时木有人感兴趣～
+        </div>
+    {% endif %}
+
+    <p>
+    {% if not is_interest and not finished %}
+        <a class="btn btn-primary" href="/event/view/{{ event.id }}/?interest=want">想参加</a>
+    {% elif is_interest and not finished %}
+        <a class="btn btn-primary" href="/event/view/{{ event.id }}/?interest=cancel">取消</a>
+    {% endif %}
+    </p>
+
+    {% if visit_user and not finished %}
+    <form method="post" action="/event/reply/{{ event.id }}">
+        <label for="content">留言</label>
+        <textarea name="content" rows="5" cols="10">{{ content }}</textarea>
+        <br />
+        <button class="btn btn-primary" type="submit">提交</button>
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="_visit_user" value="{{ visit_user.id }}">
+    </form>
+    {% if error %}
+        <div class="alert alert-error">
+            <button class="close" data-dismiss="alert">×</button>
+            <strong>Oops!</strong> {{ error }}
+        </div>
+    {% endif %}
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "index.html" %}
+
+{%block content %}
+<div class="hero-unit">
+{% if not ok and not expired%}
+    <legend>重置账号</legend>
+    <form action="/account/reset/{{ stub }}/" method="post">
+        <label for="password">密码:</label>
+        <input type="password" size="20" tabindex='1' value="" id="password" name="password">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <br />
+        <button class="btn btn-primary" type="submit" tabindex='4'>修改</button>
+    </form>
+    {% if error %}
+        <div class="alert alert-error">
+            <button class="close" data-dismiss="alert">×</button>
+            <strong>Oops!</strong> {{ error }}
+        </div>
+    {% endif %}
+{% elif not ok and expired %}
+    <legend>链接已过期</legend>
+    <a class="btn btn-warning" href="/">返回</a>
+{% else %}
+    <legend>账号已重置</legend>
+    <a class="btn btn-success" href="/">返回</a>
+{% endif %}
+</div>
+{% endblock %}

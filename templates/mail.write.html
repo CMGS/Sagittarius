@@ -1,0 +1,23 @@
+{% extends "index.html" %}
+
+{%block content %}
+<div class="hero-unit">
+    <form method="post" action="/mail/write">
+        <label for="to_uid">收件人: {{ who.name }}</label>
+        <input type="hidden" name="to_uid" value="{{ who.id }}"/>
+        <label for="title">标题</label>
+        <input type="text" name="title" value="{{ title }}" size="45"/>
+        <label for="content">内容</label>
+        <textarea name="content" rows="5" cols="10">{{ content }}</textarea>
+        <br />
+        <button class="btn btn-primary" type="submit">发送</button>
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    </form>
+    {% if error %}
+    <div class="alert alert-error">
+        <button class="close" data-dismiss="alert">×</button>
+        <strong>Oops!</strong> {{ error }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

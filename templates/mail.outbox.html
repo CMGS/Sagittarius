@@ -1,0 +1,29 @@
+{% extends "index.html" %}
+{% from "macros.html" import render_pagination %}
+
+{%block content %}
+<div class="hero-unit">
+    <legend>发件箱</legend>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <td>发件人</td>
+                <td>标题</td>
+            </tr>
+        </thead>
+        <tbody>
+        {% for mail in mails %}
+        <tr>
+            <td><a href="/people/{{ mail.to_uid_url }}">{{ mail.to_uid }}</a></td>
+            <td><a href="/mail/view/{{ mail.id }}">{{ mail.title }}</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    <table>
+{{ render_pagination(list_page, '/mail/outbox') }}
+<p>
+    <a class="btn btn-primary" href="/mail/">收件箱</a>
+    <a class="btn btn-primary" href="/mail/outbox">发件箱</a>
+</p>
+</div>
+{% endblock %}

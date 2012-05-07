@@ -1,0 +1,26 @@
+{% extends "index.html" %}
+
+{%block content %}
+{% if not send %}
+<div class="hero-unit">
+    <legend>邮箱</legend>
+    <form method="post" action="/account/forget/" class="form-inline">
+        <input type="text" size="30" tabindex='1' value="" id="email" name="email">
+        <input type="hidden" value="{{ csrf_token() }}" name="_csrf_token">
+        <input class="btn btn-primary" type="submit" value="确定" name="allow" />
+        <input class="btn btn-primary" type="submit" value="取消" name="cancel" />
+    </form>
+    {% if error %}
+    <div class="alert alert-error">
+        <button class="close" data-dismiss="alert">×</button>
+        <strong>Oops!</strong> {{ error }}
+    </div>
+    {% endif %}
+</div>
+{% else %}
+    <div class="alert alert-success">
+        <a href="/" class="close" data-dismiss="alert">×</a>
+        请查看邮箱
+    </div>
+{% endif %}
+{% endblock %}

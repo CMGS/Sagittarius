@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 api = Blueprint('api', __name__)
 
 @csrf_exempt
-@api.route('/register', methods=['POST'])
+@api.route('/register/', methods=['POST'])
 def register():
     user = get_current_user()
     if user:
@@ -40,7 +40,7 @@ def register():
             email=user.email, name=user.name)
 
 @csrf_exempt
-@api.route('/login', methods=['POST'])
+@api.route('/login/', methods=['POST'])
 def api_login():
     user = get_current_user()
     if user:
@@ -63,12 +63,12 @@ def api_login():
     return jsonify(status='ok', user_id=user.id, \
             email=user.email, name=user.name)
 
-@api.route('/logout')
+@api.route('/logout/')
 def api_logout():
     account_logout()
     return jsonify(status='ok')
 
-@api.route('/people/<username>')
+@api.route('/people/<username>/')
 def api_people(username):
     people = get_user(username)
     if people:
