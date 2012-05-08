@@ -205,7 +205,7 @@ def view(tid):
     select_list = gen_userlist(select)
 
     # if reply failed
-    error, reply_content = session.pop('reply', ('', None))
+    error, reply_content = session.pop('reply', (None, ''))
 
     return render_template('event.view.html', event = eobj, \
             visit_user = user, reply = reply, finished = eobj.finished, \
