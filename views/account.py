@@ -157,24 +157,28 @@ def setting():
     if username != user.name:
         status = check_username(username)
         if status:
-            return render_template('account.setting.html', error=status[1], user=user)
+            return render_template('account.setting.html', error=status[1], \
+                    error_type='error', user=user)
         _change_username(user, username)
 
     if domain:
         for status in [check_domain(domain), check_domain_exists(domain)]:
             if status:
-                return render_template('account.setting.html', error=status[1], user=user)
+                return render_template('account.setting.html', error=status[1], \
+                        error_type='error', user=user)
         _set_domain(user, domain)
 
     if password:
         status = check_password(password)
         if status:
-            return render_template('account.setting.html', error=status[1], user=user)
+            return render_template('account.setting.html', error=status[1], \
+                    error_type='error', user=user)
         _change_password(user, password)
     db.session.commit()
     #clear cache
     clear_user_cache(user)
-    return render_template('account.setting.html', error='update ok', user=user)
+    return render_template('account.setting.html', error='update ok', \
+            error_type='success', user=user)
 
 def clear_user_cache(user):
     keys = ['account:%s' % key for key in [str(user.id), user.domain, user.email]]
