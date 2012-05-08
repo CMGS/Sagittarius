@@ -8,7 +8,7 @@ from models.group import *
 from config import PAGE_NUM
 from sheep.api.cache import backend
 from flask import render_template, redirect, \
-    request, url_for, g, Blueprint, abort
+    request, url_for, session, Blueprint, abort
 
 logger = logging.getLogger(__name__)
 
@@ -204,11 +204,15 @@ def view(tid):
         interest_list = gen_userlist(interest)
     select_list = gen_userlist(select)
 
+    # if reply failed
+    error, reply_content = session.pop('reply', ('', None))
+
     return render_template('event.view.html', event = eobj, \
             visit_user = user, reply = reply, finished = eobj.finished, \
             list_page = reply_list, select = select, interest = interest, \
             select_list = select_list, interest_list = interest_list, \
-            is_host = user.id == host.id, is_interest = is_interest)
+            is_host = user.id == host.id, is_interest = is_interest, \
+            content = reply_content, error = error)
 
 @event.route('/select/<int:tid>/<int:uid>/')
 def select(tid, uid):
@@ -240,8 +244,8 @@ def reply(tid):
 
     if error is not None:
         eobj = gen_event(topic)
-        return render_template('event.view.html', \
-                content = content, error=error, event=eobj)
+        session['reply'] = (error, content)
+        return redirect(url_for('event.view', tid=eobj.id))
 
     Reply.create(topic_id = topic.id,
                  content = content,
