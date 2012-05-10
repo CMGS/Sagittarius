@@ -193,9 +193,14 @@ def view(tid):
         return redirect(url_for('account.login')+\
                 '?redirect=%s' % url_for('event.view', tid=eobj.id)+'?interest=%s' % interest)
 
-    is_interest = get_is_interest(topic.id, user.id)
-    if _user_control_interest(interest, eobj, user, is_interest):
+    is_interest = None
+    if user:
         is_interest = get_is_interest(topic.id, user.id)
+        if _user_control_interest(interest, eobj, user, is_interest):
+            is_interest = get_is_interest(topic.id, user.id)
+    else:
+        user = Obj()
+        user.id = -1
 
     interest = get_interest_users(eobj.id)
     select = get_select_users(eobj.id)
