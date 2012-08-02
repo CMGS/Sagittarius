@@ -16,7 +16,6 @@ from views.event import event
 from views.people import people
 from views.account import account
 
-from sheep.api.permdir import permdir
 from sheep.api.statics import static_files
 from sheep.api.sessions import SessionMiddleware, \
     FilesystemSessionStore
